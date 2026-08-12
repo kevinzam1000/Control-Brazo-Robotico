@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Control de brillo Arduino</title>
 
     <style>
@@ -81,11 +80,6 @@
 
         #connectButton {
             background: #222;
-            color: white;
-        }
-
-        #sendButton {
-            background: #2e7d32;
             color: white;
         }
 
@@ -170,11 +164,6 @@
 
         </div>
 
-        <!-- ENVIAR -->
-        <button id="sendButton" disabled>
-            Aplicar brillo
-        </button>
-
         <!-- DESCONECTAR -->
         <button id="disconnectButton" disabled>
             Desconectar Arduino
@@ -187,16 +176,12 @@
 
     </div>
 
-
     <script>
-
         let port = null;
         let writer = null;
 
-
         // ELEMENTOS
         const connectButton = document.getElementById("connectButton");
-        const sendButton = document.getElementById("sendButton");
         const disconnectButton = document.getElementById("disconnectButton");
 
         const brightnessInput = document.getElementById("brightnessInput");
@@ -205,93 +190,66 @@
 
         const status = document.getElementById("status");
 
-
         // CONECTAR ARDUINO
         connectButton.addEventListener("click", async () => {
-
             try {
-
                 port = await navigator.serial.requestPort();
-
-                await port.open({
-                    baudRate: 9600
-                });
+                await port.open({ baudRate: 9600 });
 
                 writer = port.writable.getWriter();
 
                 connectButton.disabled = true;
-                sendButton.disabled = false;
                 disconnectButton.disabled = false;
 
                 brightnessInput.disabled = false;
                 brightnessSlider.disabled = false;
 
                 status.textContent = "Arduino conectado";
-
             } catch (error) {
-
                 console.error(error);
-
                 status.textContent = "No se pudo conectar";
-
             }
-
         });
 
+        // FUNCIÓN PRINCIPAL DE ENVÍO Y SINCRONIZACIÓN
+        async function updateAndSendBrightness(val, sourceElement) {
+            let value = Number(val);
 
-        // CAMBIAR VALOR DESDE EL CAMPO NUMÉRICO
-        brightnessInput.addEventListener("input", () => {
+            if (isNaN(value)) return;
 
-            let value = Number(brightnessInput.value);
+            if (value < 0) value = 0;
+            if (value > 255) value = 255;
 
-            if (value < 0) {
-                value = 0;
-                brightnessInput.value = 0;
-            }
-
-            if (value > 255) {
-                value = 255;
-                brightnessInput.value = 255;
-            }
-
-            brightnessSlider.value = value;
+            // Sincronizar las entradas según la fuente de origen
+            if (sourceElement !== brightnessInput) brightnessInput.value = value;
+            if (sourceElement !== brightnessSlider) brightnessSlider.value = value;
             brightnessValue.textContent = value;
 
+            // Enviar inmediatamente si el puerto está abierto
+            if (writer) {
+                try {
+                    const data = new TextEncoder().encode(value + "\n");
+                    await writer.write(data);
+                    status.textContent = "Brillo actual: " + value;
+                } catch (err) {
+                    console.error("Error al enviar:", err);
+                }
+            }
+        }
+
+        // CAMBIOS EN TIEMPO REAL DESDE EL CAMPO NUMÉRICO
+        brightnessInput.addEventListener("input", (e) => {
+            updateAndSendBrightness(e.target.value, brightnessInput);
         });
 
-
-        // CAMBIAR VALOR DESDE LA BARRA
-        brightnessSlider.addEventListener("input", () => {
-
-            const value = brightnessSlider.value;
-
-            brightnessInput.value = value;
-            brightnessValue.textContent = value;
-
+        // CAMBIOS EN TIEMPO REAL DESDE EL DESLIZADOR (SLIDER)
+        brightnessSlider.addEventListener("input", (e) => {
+            updateAndSendBrightness(e.target.value, brightnessSlider);
         });
-
-
-        // ENVIAR BRILLO
-        sendButton.addEventListener("click", async () => {
-
-            if (!writer) return;
-
-            const value = Number(brightnessInput.value);
-
-            const data = new TextEncoder().encode(value + "\n");
-
-            await writer.write(data);
-
-            status.textContent = "Brillo enviado: " + value;
-
-        });
-
 
         // DESCONECTAR
         disconnectButton.addEventListener("click", async () => {
-
             try {
-
                 if (writer) {
                     writer.releaseLock();
                     writer = null;
@@ -303,24 +261,17 @@
                 }
 
                 connectButton.disabled = false;
-                sendButton.disabled = true;
                 disconnectButton.disabled = true;
 
                 brightnessInput.disabled = true;
                 brightnessSlider.disabled = true;
 
                 status.textContent = "Arduino desconectado";
-
             } catch (error) {
-
                 console.error(error);
-
                 status.textContent = "Error al desconectar";
-
             }
-
         });
-
     </script>
 
 </body>
