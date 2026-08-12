@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Control Arduino</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #connectButton {
+            background: #222;
+            color: white;
+        }
+
+        #onButton {
+            background: #2e7d32;
+            color: white;
+        }
+
+        #offButton {
+            background: #c62828;
+            color: white;
+        }
+
+        button:disabled {
+            background: #ccc !important;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 25px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #eee;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Control Arduino</h1>
+
+        <p class="description">
+            Control del LED mediante comunicación serial
+        </p>
+
+        <button id="connectButton">
+            Conectar Arduino
+        </button>
+
+        <button id="onButton" disabled>
+            Encender LED
+        </button>
+
+        <button id="offButton" disabled>
+            Apagar LED
+        </button>
+
+        <div class="status" id="status">
+            Arduino desconectado
+        </div>
+
+    </div>
+
+    <script>
+
+        let port;
+        let writer;
+
+        const connectButton = document.getElementById("connectButton");
+        const onButton = document.getElementById("onButton");
+        const offButton = document.getElementById("offButton");
+        const status = document.getElementById("status");
+
+
+        // CONECTAR ARDUINO
+        connectButton.addEventListener("click", async () => {
+
+            try {
+
+                port = await navigator.serial.requestPort();
+
+                await port.open({
+                    baudRate: 9600
+                });
+
+                writer = port.writable.getWriter();
+
+                status.textContent = "Arduino conectado";
+                connectButton.textContent = "Arduino conectado";
+
+                onButton.disabled = false;
+                offButton.disabled = false;
+
+            } catch (error) {
+
+                console.error(error);
+
+                status.textContent = "No se pudo conectar";
+
+            }
+
+        });
+
+
+        // ENCENDER LED
+        onButton.addEventListener("click", async () => {
+
+            if (!writer) return;
+
+            const data = new TextEncoder().encode("ON\n");
+
+            await writer.write(data);
+
+            status.textContent = "LED encendido";
+
+        });
+
+
+        // APAGAR LED
+        offButton.addEventListener("click", async () => {
+
+            if (!writer) return;
+
+            const data = new TextEncoder().encode("OFF\n");
+
+            await writer.write(data);
+
+            status.textContent = "LED apagado";
+
+        });
+
+    </script>
+
+</body>
+</html>
