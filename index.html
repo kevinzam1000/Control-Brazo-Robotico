@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control NEMA 17 - TB6600</title>
+    <title>Control Cinemático - Brazo Robótico</title>
 
     <style>
         * {
@@ -16,184 +16,244 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f0f2f5;
             min-height: 100vh;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
         }
 
-        .container {
-            background: white;
+        .main-container {
             width: 100%;
-            max-width: 480px;
-            padding: 30px;
+            max-width: 1000px;
+            background: white;
+            padding: 25px;
             border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
 
         h1 {
             text-align: center;
-            font-size: 24px;
+            margin-bottom: 5px;
             color: #1a1a1a;
-            margin-bottom: 6px;
         }
 
         .subtitle {
             text-align: center;
             color: #666;
+            margin-bottom: 20px;
             font-size: 14px;
-            margin-bottom: 25px;
         }
 
-        .connection-box {
+        .top-bar {
             display: flex;
             gap: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2b3a4a;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .coord-field {
+            flex: 1;
+        }
+
+        .coord-field label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #444;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            text-align: center;
+            font-weight: bold;
         }
 
         button {
-            flex: 1;
-            padding: 12px 16px;
+            width: 100%;
+            padding: 12px;
             border: none;
             border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
+            margin-bottom: 10px;
         }
 
-        #connectBtn {
-            background: #1a73e8;
-            color: white;
-        }
+        #connectBtn { background: #1a73e8; color: white; }
+        #disconnectBtn { background: #d93025; color: white; }
+        #moveBtn { background: #2e7d32; color: white; }
+        #homeBtn { background: #f57c00; color: white; }
+        #freeBtn { background: #616161; color: white; }
 
-        #connectBtn:hover {
-            background: #1557b0;
-        }
-
-        #disconnectBtn {
-            background: #d93025;
-            color: white;
-        }
-
-        #disconnectBtn:hover {
-            background: #a50e0e;
-        }
+        #recordBtn { background: #0288d1; color: white; }
+        #runSeqBtn { background: #388e3c; color: white; }
+        #stopSeqBtn { background: #c62828; color: white; }
+        #clearSeqBtn { background: #757575; color: white; }
 
         button:disabled {
             background: #e0e0e0 !important;
             color: #a0a0a0 !important;
             cursor: not-allowed;
-            box-shadow: none;
         }
 
-        .control-group {
-            margin-bottom: 20px;
+        .sequence-list {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding: 5px;
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
+        .seq-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            font-family: monospace;
             font-size: 14px;
         }
 
-        input[type="number"] {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 18px;
-            text-align: center;
-            font-weight: bold;
-            outline: none;
-            transition: border-color 0.2s;
+        .seq-item:last-child {
+            border-bottom: none;
         }
 
-        input[type="number"]:focus {
-            border-color: #1a73e8;
-        }
-
-        .quick-buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .btn-quick {
-            background: #e8f0fe;
-            color: #1a73e8;
-            padding: 8px;
-            font-size: 13px;
-        }
-
-        .btn-quick:hover {
-            background: #d2e3fc;
-        }
-
-        #rotateBtn {
-            width: 100%;
-            padding: 15px;
-            background: #34a853;
+        .btn-delete-item {
+            background: #d93025;
             color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            padding: 0;
             font-size: 16px;
-            margin-top: 10px;
-            border-radius: 8px;
-        }
-
-        #rotateBtn:hover {
-            background: #2d8e47;
+            line-height: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .status-box {
-            margin-top: 25px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+            margin-top: 15px;
+            padding: 12px;
+            background: #2b3a4a;
+            color: #38ef7d;
             font-family: monospace;
-            font-size: 13px;
-            color: #495057;
-            min-height: 50px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            min-height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
+    <div class="main-container">
 
-        <h1>Control NEMA 17 (TB6600)</h1>
-        <p class="subtitle">Prueba de 1 Eje - Comunicación Serial</p>
+        <h1>Interfaz Brazo Robótico</h1>
+        <p class="subtitle">Control Cinemático Directo y Generador de Secuencias</p>
 
-        <!-- BOTONES DE CONEXIÓN -->
-        <div class="connection-box">
+        <!-- BARRA SUPERIOR DE CONEXIÓN -->
+        <div class="top-bar">
             <button id="connectBtn">Conectar Serial</button>
             <button id="disconnectBtn" disabled>Desconectar</button>
         </div>
 
-        <!-- CONTROL NUMÉRICO -->
-        <div class="control-group">
-            <label for="degreesInput">Grados a girar (Positivos / Negativos):</label>
-            <input type="number" id="degreesInput" value="90" step="1" disabled>
+        <div class="grid-layout">
 
-            <!-- ACCESOS RÁPIDOS -->
-            <div class="quick-buttons">
-                <button class="btn-quick" onclick="setDegrees(45)" disabled>+45°</button>
-                <button class="btn-quick" onclick="setDegrees(90)" disabled>+90°</button>
-                <button class="btn-quick" onclick="setDegrees(180)" disabled>+180°</button>
-                <button class="btn-quick" onclick="setDegrees(-90)" disabled>-90°</button>
+            <!-- PANEL DE CONTROL DIRECTO -->
+            <div class="panel">
+                <div class="panel-title">Control Directo (XYZ)</div>
+
+                <div class="input-group">
+                    <div class="coord-field">
+                        <label for="inputX">X (mm)</label>
+                        <input type="number" id="inputX" value="130" disabled>
+                    </div>
+                    <div class="coord-field">
+                        <label for="inputY">Y (mm)</label>
+                        <input type="number" id="inputY" value="185" disabled>
+                    </div>
+                    <div class="coord-field">
+                        <label for="inputZ">Z (mm)</label>
+                        <input type="number" id="inputZ" value="-130" disabled>
+                    </div>
+                </div>
+
+                <button id="moveBtn" disabled>Ejecutar Coordenadas</button>
+                <button id="homeBtn" disabled>Ir a Posición Inicial (Home)</button>
+                <button id="freeBtn" disabled>Liberar / Habilitar Motores</button>
             </div>
-        </div>
 
-        <!-- BOTÓN EJECUTAR -->
-        <button id="rotateBtn" disabled>Girar Motor</button>
+            <!-- PANEL DE SECUENCIA / PARCIALES -->
+            <div class="panel">
+                <div class="panel-title">Panel de Secuencia</div>
+
+                <div class="sequence-list" id="sequenceContainer">
+                    <div style="text-align: center; color: #888; padding: 20px;" id="emptyMsg">
+                        No hay puntos guardados
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="coord-field" style="flex: 2;">
+                        <label for="intervalInput">Tiempo de espera (seg):</label>
+                        <input type="number" id="intervalInput" value="2" min="1" disabled>
+                    </div>
+                </div>
+
+                <button id="recordBtn" disabled>Grabar Posición Parcial</button>
+                <button id="runSeqBtn" disabled>Ejecutar Secuencia</button>
+                <button id="stopSeqBtn" style="display: none;">Detener Secuencia</button>
+                <button id="clearSeqBtn" disabled>Borrar Toda la Secuencia</button>
+            </div>
+
+        </div>
 
         <!-- TERMINAL DE ESTADO -->
         <div class="status-box" id="statusText">
@@ -207,27 +267,46 @@
         let writer = null;
         let reader = null;
         let keepReading = true;
+        let sequence = [];
+        let isExecutingSeq = false;
+        let stopRequested = false;
 
         // ELEMENTOS DOM
         const connectBtn = document.getElementById("connectBtn");
         const disconnectBtn = document.getElementById("disconnectBtn");
-        const rotateBtn = document.getElementById("rotateBtn");
-        const degreesInput = document.getElementById("degreesInput");
-        const statusText = document.getElementById("statusText");
-        const quickBtns = document.querySelectorAll(".btn-quick");
+        const moveBtn = document.getElementById("moveBtn");
+        const homeBtn = document.getElementById("homeBtn");
+        const freeBtn = document.getElementById("freeBtn");
 
-        // ESTADO DE INTERFAZ
+        const recordBtn = document.getElementById("recordBtn");
+        const runSeqBtn = document.getElementById("runSeqBtn");
+        const stopSeqBtn = document.getElementById("stopSeqBtn");
+        const clearSeqBtn = document.getElementById("clearSeqBtn");
+
+        const inputX = document.getElementById("inputX");
+        const inputY = document.getElementById("inputY");
+        const inputZ = document.getElementById("inputZ");
+        const intervalInput = document.getElementById("intervalInput");
+
+        const sequenceContainer = document.getElementById("sequenceContainer");
+        const emptyMsg = document.getElementById("emptyMsg");
+        const statusText = document.getElementById("statusText");
+
+        // HABILITAR / DESHABILITAR INTERFAZ
         function setControlsState(enabled) {
             connectBtn.disabled = enabled;
             disconnectBtn.disabled = !enabled;
-            rotateBtn.disabled = !enabled;
-            degreesInput.disabled = !enabled;
-            quickBtns.forEach(btn => btn.disabled = !enabled);
-        }
+            moveBtn.disabled = !enabled;
+            homeBtn.disabled = !enabled;
+            freeBtn.disabled = !enabled;
+            recordBtn.disabled = !enabled;
+            runSeqBtn.disabled = !enabled || sequence.length === 0;
+            clearSeqBtn.disabled = !enabled || sequence.length === 0;
 
-        // ACCESO RÁPIDO A GRADOS
-        function setDegrees(val) {
-            degreesInput.value = val;
+            inputX.disabled = !enabled;
+            inputY.disabled = !enabled;
+            inputZ.disabled = !enabled;
+            intervalInput.disabled = !enabled;
         }
 
         // CONECTAR ARDUINO
@@ -240,36 +319,45 @@
                 keepReading = true;
 
                 setControlsState(true);
-                statusText.textContent = "Conectado a Arduino";
+                statusText.textContent = "Estado: Conectado";
 
-                // Iniciar lectura en segundo plano
                 readFromArduino();
 
             } catch (error) {
                 console.error("Error al conectar:", error);
-                statusText.textContent = "Error al conectar con el puerto";
+                statusText.textContent = "Error al conectar puerto serie";
             }
         });
 
-        // ENVIAR COMANDO DE GIRO
-        rotateBtn.addEventListener("click", async () => {
+        // ENVIAR COMANDO A ARDUINO
+        async function sendCommand(cmd) {
             if (!writer) return;
-
-            const degrees = degreesInput.value;
-
-            if (degrees === "" || isNaN(degrees)) {
-                statusText.textContent = "Por favor ingresa un número válido";
-                return;
-            }
-
             try {
-                const data = new TextEncoder().encode(degrees + "\n");
+                const data = new TextEncoder().encode(cmd + "\n");
                 await writer.write(data);
-                statusText.textContent = "Comando enviado: " + degrees + "°";
-            } catch (error) {
-                console.error("Error al enviar:", error);
-                statusText.textContent = "Error de comunicación al enviar";
+            } catch (err) {
+                console.error("Error al enviar comando:", err);
+                statusText.textContent = "Error de transmisión";
             }
+        }
+
+        // ACCIONES DE BOTONES DIRECTOS
+        moveBtn.addEventListener("click", () => {
+            const x = inputX.value;
+            const y = inputY.value;
+            const z = inputZ.value;
+            sendCommand(`MOVE:${x},${y},${z}`);
+            statusText.textContent = `Enviando movimiento: X:${x} Y:${y} Z:${z}`;
+        });
+
+        homeBtn.addEventListener("click", () => {
+            sendCommand("HOME");
+            statusText.textContent = "Enviando orden a Home...";
+        });
+
+        freeBtn.addEventListener("click", () => {
+            sendCommand("TOGGLE_ENABLE");
+            statusText.textContent = "Cambiando estado de motores...";
         });
 
         // LECTURA DESDE ARDUINO
@@ -286,7 +374,8 @@
                         break;
                     }
                     if (value) {
-                        statusText.textContent = "Arduino: " + value.trim();
+                        const msg = value.trim();
+                        if (msg) statusText.textContent = "Arduino: " + msg;
                     }
                 }
             } catch (error) {
@@ -294,7 +383,97 @@
             }
         }
 
-        // DESCONECTAR ARDUINO
+        // --- GESTIÓN DE SECUENCIAS (PARCIALES) ---
+
+        function renderSequence() {
+            sequenceContainer.innerHTML = "";
+
+            if (sequence.length === 0) {
+                sequenceContainer.appendChild(emptyMsg);
+                runSeqBtn.disabled = true;
+                clearSeqBtn.disabled = true;
+                return;
+            }
+
+            if (port) {
+                runSeqBtn.disabled = false;
+                clearSeqBtn.disabled = false;
+            }
+
+            sequence.forEach((pt, index) => {
+                const item = document.createElement("div");
+                item.className = "seq-item";
+                item.innerHTML = `
+                    <span><strong>#${index + 1}</strong> -> X: ${pt.x}, Y: ${pt.y}, Z: ${pt.z}</span>
+                    <button class="btn-delete-item" onclick="deletePoint(${index})">-</button>
+                `;
+                sequenceContainer.appendChild(item);
+            });
+        }
+
+        recordBtn.addEventListener("click", () => {
+            const pt = {
+                x: inputX.value,
+                y: inputY.value,
+                z: inputZ.value
+            };
+            sequence.push(pt);
+            renderSequence();
+            statusText.textContent = `Punto #${sequence.length} grabado`;
+        });
+
+        function deletePoint(index) {
+            sequence.splice(index, 1);
+            renderSequence();
+            statusText.textContent = `Punto borrado`;
+        }
+
+        clearSeqBtn.addEventListener("click", () => {
+            sequence = [];
+            renderSequence();
+            statusText.textContent = "Secuencia borrada por completo";
+        });
+
+        // EJECUCIÓN PASO A PASO DE LA SECUENCIA
+        runSeqBtn.addEventListener("click", async () => {
+            if (sequence.length === 0 || isExecutingSeq) return;
+
+            isExecutingSeq = true;
+            stopRequested = false;
+
+            runSeqBtn.style.display = "none";
+            stopSeqBtn.style.display = "block";
+            setControlsState(false);
+            disconnectBtn.disabled = true;
+
+            const intervalSec = parseFloat(intervalInput.value) || 2;
+
+            for (let i = 0; i < sequence.length; i++) {
+                if (stopRequested) {
+                    statusText.textContent = "Secuencia detenida por el usuario";
+                    break;
+                }
+
+                const pt = sequence[i];
+                statusText.textContent = `Ejecutando Punto #${i + 1} de ${sequence.length} (X:${pt.x}, Y:${pt.y}, Z:${pt.z})`;
+                sendCommand(`MOVE:${pt.x},${pt.y},${pt.z}`);
+
+                // Tiempo de espera para que el robot se mueva + tiempo de pausa asignado por el usuario
+                await new Promise(r => setTimeout(r, (intervalSec * 1000) + 2000));
+            }
+
+            isExecutingSeq = false;
+            runSeqBtn.style.display = "block";
+            stopSeqBtn.style.display = "none";
+            setControlsState(true);
+            if (!stopRequested) statusText.textContent = "Secuencia completada con éxito";
+        });
+
+        stopSeqBtn.addEventListener("click", () => {
+            stopRequested = true;
+        });
+
+        // DESCONECTAR
         disconnectBtn.addEventListener("click", async () => {
             try {
                 keepReading = false;
